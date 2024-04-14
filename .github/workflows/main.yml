@@ -23,13 +23,30 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    # 复制现有文件以备比较
+    - name: Backup existing files
+      run: |
+        cp ipv4.txt ipv4.txt.bak
+        cp ipv6.txt ipv6.txt.bak
+        cp host.conf host.conf.bak
+
     - name: Run update.py
       run: python update.py
+
+    # 检查新旧文件内容是否相同
+    - name: Check if files are identical to their backups
+      run: |
+       if cmp -s ipv4.txt ipv4.txt.bak && cmp -s ipv6.txt ipv6.txt.bak && cmp -s host.conf host.conf.bak; then
+         echo "No changes detected in the files. Exiting..."
+         exit 0
+       else
+         echo "Changes detected in the files. Proceeding to commit..."
+       fi
 
     - name: Commit and push
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
         git add ipv4.txt ipv6.txt host.conf
-        git commit -m "Update Rule"
-        git push --force
+        git commit -m "Update Rule" 
+        git push
